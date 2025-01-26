@@ -117,7 +117,7 @@ public class MealPlannerGUI extends Application {
 
         // create a button to load the logs that have been previously saved
         Button loadLogButton = new Button("Load Log");
-        loadLogButton.setOnAction(e -> displayDailyLogs());
+        loadLogButton.setOnAction(e -> loadLogFromFile());
 
         // add them all to the logsLayout VBox
         logsLayout.getChildren().addAll(logArea, loadLogButton);
@@ -145,7 +145,7 @@ public class MealPlannerGUI extends Application {
         dailyLogger.log(currentDate, logEntry);
 
         // Update the summary area with all meals logged for today
-        summaryArea.setText("Meals logged for today:\n" + dailyLogger.logs.get(currentDate).toString());
+        summaryArea.setText("Meals logged for today:\n" + String.join("\n", dailyLogger.getLogsForDate(currentDate)));
 
         // Clear input fields
         mealNameField.clear();
@@ -154,19 +154,24 @@ public class MealPlannerGUI extends Application {
         waterIntakeField.clear();
     }
 
-    private void displayDailyLogs() {
-        // display all the logs
-        logArea.setText(dailyLogger.getAllLogs());
-    }
-
     private void saveLogToFile() {
-        // tries to save the log to the meals.txt file if it exists
+        // a method to save whatever input is logged into a .txt file so that it can be loaded later
         try {
             dailyLogger.saveToFile("meals.txt");
             System.out.println("Logs saved successfully.");
         } catch (IOException e) {
-            // catch the exception if it returns an error exception then print the error
             System.err.println("Error saving log to file: " + e.getMessage());
+        }
+    }
+
+    private void loadLogFromFile() {
+        // a method to load the saved logs
+        try {
+            dailyLogger.loadFromFile("meals.txt");
+            logArea.setText(dailyLogger.getAllLogs());
+            System.out.println("Logs loaded successfully.");
+        } catch (IOException e) {
+            System.err.println("Error loading log from file: " + e.getMessage());
         }
     }
 
