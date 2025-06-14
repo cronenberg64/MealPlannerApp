@@ -1,6 +1,6 @@
 # Meal Planner App
 
-A full-stack meal planning application with a Spring Boot backend and React Native mobile frontend.
+I developed a full-stack meal planning application with a Spring Boot backend and React Native mobile frontend as an extension to my java programming class assignment.
 
 ## Features
 
