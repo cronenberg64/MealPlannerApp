@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   TextInput,
+  RefreshControl,
 } from 'react-native';
 import { mealService } from '../services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -14,6 +15,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const HomeScreen = ({ navigation }) => {
   const [meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
 
@@ -33,6 +35,12 @@ const HomeScreen = ({ navigation }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadMeals();
+    setRefreshing(false);
   };
 
   const handleSearch = async () => {
@@ -71,7 +79,10 @@ const HomeScreen = ({ navigation }) => {
   const renderMealItem = ({ item }) => (
     <TouchableOpacity
       style={styles.mealCard}
-      onPress={() => navigation.navigate('MealDetail', { mealId: item.id, mealName: item.name })}
+      onPress={() => navigation.navigate('MealDetail', {
+        mealId: item.id,
+        mealName: item.name,
+      })}
     >
       {item.imageUrl ? (
         <Image source={{ uri: item.imageUrl }} style={styles.mealImage} />
@@ -95,8 +106,26 @@ const HomeScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FF6B6B" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>My Meals</Text>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate('AddMeal')}
+        >
+          <Icon name="add" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -137,16 +166,31 @@ const HomeScreen = ({ navigation }) => {
         />
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#FF6B6B" style={styles.loader} />
-      ) : (
-        <FlatList
-          data={meals}
-          renderItem={renderMealItem}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.mealList}
-        />
-      )}
+      <FlatList
+        data={meals}
+        renderItem={renderMealItem}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.mealList}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#FF6B6B']}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Icon name="restaurant" size={48} color="#666" />
+            <Text style={styles.emptyText}>No meals added yet</Text>
+            <TouchableOpacity
+              style={styles.emptyButton}
+              onPress={() => navigation.navigate('AddMeal')}
+            >
+              <Text style={styles.emptyButtonText}>Add Your First Meal</Text>
+            </TouchableOpacity>
+          </View>
+        }
+      />
     </View>
   );
 };
@@ -155,6 +199,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#FF6B6B',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -253,10 +322,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
-  loader: {
+  emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  emptyButton: {
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  emptyButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
